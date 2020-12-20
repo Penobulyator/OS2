@@ -7,6 +7,7 @@ HostSocketHandler::HostSocketHandler(TcpSocket * clientSocket, TcpSocket * hostS
 	this->hostSocket = hostSocket;
 	this->proxy = proxy;
 	this->cache = cache;
+	this->url = NULL;
 
 	state = WAITING_FOR_RESPONCE;
 }
@@ -15,7 +16,7 @@ HostSocketHandler::~HostSocketHandler()
 {
 }
 
-void HostSocketHandler::recvChunk() {
+bool HostSocketHandler::recvChunk() {
 	//read
 	char *buf = new char[CHUNK_SIZE];
 	int length = hostSocket->_read(buf, CHUNK_SIZE);
@@ -24,8 +25,7 @@ void HostSocketHandler::recvChunk() {
 	//std::cout << buf;
 
 	if (length == 0) {
-		proxy->closeSession(hostSocket);
-		return;
+		return false;
 	}
 
 	//add chunk to message queue
@@ -36,9 +36,11 @@ void HostSocketHandler::recvChunk() {
 
 	//add chunk to cache
 	cache->addChunk(url, chunk);
+
+	return true;
 }
 
-void HostSocketHandler::sendChunk()
+bool HostSocketHandler::sendChunk()
 {
 	if (!messageQueue.empty()) {
 		messageChunk chunk = messageQueue.back();
@@ -46,13 +48,16 @@ void HostSocketHandler::sendChunk()
 
 		int length = clientSocket->_write(chunk.buf, chunk.length);
 		if (length == 0) {
-			proxy->closeSession(clientSocket);
-			return;
+			return false;
 		}
 	}
+	return true;
 }
 
-void HostSocketHandler::handle(PollResult pollResult)
+//
+// returns false if session should be closed
+//
+bool HostSocketHandler::handle(PollResult pollResult)
 {
 	int fd = pollResult.fd;
 	int revents = pollResult.revents;
@@ -64,15 +69,17 @@ void HostSocketHandler::handle(PollResult pollResult)
 			if (revents & POLLHUP) {
 
 				//peer closed its end of the channel
-				proxy->closeSession(hostSocket);
+				return false;
 			}
 			else if (revents & POLLIN) {
 				//we have a new request to read
-				proxy->gotNewResponce(this);
-				recvChunk();
 
 				//change state
 				state = READING_RESPONCE;
+				proxy->gotNewResponce(this);
+
+				return recvChunk();
+
 			}
 		}
 		break;
@@ -83,36 +90,39 @@ void HostSocketHandler::handle(PollResult pollResult)
 			if (revents & POLLHUP) {
 
 				//peer closed its end of the channel
-				proxy->closeSession(hostSocket);
+				return false;
 			}
 			else if (revents & POLLIN) {
-
-				//we can read a chunk from client
-				recvChunk();
-
+				
 				//for client socket to be ready for write
 				proxy->changeEvents(clientSocket, POLLIN | POLLHUP | POLLOUT);
+
+				//we can read a chunk from client
+				return recvChunk();
+
 			}
 		}
 		else if (fd == clientSocket->fd) {
 			if (revents & POLLHUP) {
 
-				//peer closed its end of the channel
-				proxy->closeSession(clientSocket);
+				return false;
 			}
 			else if (revents & POLLOUT) {
 
 				//we can send a chunk to host
-				sendChunk();
+				if (!sendChunk())
+					return false;
 
 				//if queue is empty, don't wait for client socket to be ready for write
 				if (messageQueue.empty()) {
 					proxy->changeEvents(clientSocket, POLLIN | POLLHUP);
 				}
+
 			}
 		}
-		break;
 	}
+
+	return true;
 }
 
 void HostSocketHandler::finishReadingResponce()
@@ -122,8 +132,6 @@ void HostSocketHandler::finishReadingResponce()
 		cache->makeEntryFull(url);
 	}
 }
-
-
 
 void HostSocketHandler::waitForNextResponce(char *url)
 {

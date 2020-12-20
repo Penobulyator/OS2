@@ -25,18 +25,21 @@ private:
 
 	std::queue<messageChunk> messageQueue;
 
-	void readFirstRequestChunk();
-	void recvChunk();
+	bool recvFirstRequestChunk();
+	bool recvChunk();
 
-	void sendChunk();
+	bool sendChunk();
 
-	void parseRequest(char *request);
+	bool parseRequest(char *request);
 
 public:
 	ClientSocketHandler(TcpSocket *clientSocket, HttpProxy *proxy);
 	~ClientSocketHandler();
 
-	void handle(PollResult pollResult);
+	//
+	// returns false if session should be closed
+	//
+	bool handle(PollResult pollResult);
 
 	void waitForRequest();
 

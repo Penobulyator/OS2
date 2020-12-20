@@ -37,10 +37,12 @@ private:
 
 	void addHostSocketHandler(TcpSocket *clientSocket, TcpSocket *hostSocket);
 
+	void closeSession(int proxyEntryIndex);
 
 	void acceptClient();
 
 	TcpSocket* connectToHost(char* hostName);
+
 public:
 	HttpProxy(int listenPort);
 	~HttpProxy();

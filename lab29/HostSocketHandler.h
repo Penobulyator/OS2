@@ -30,13 +30,16 @@ private:
 
 	char* url;
 
-	void recvChunk();
-	void sendChunk();
+	bool recvChunk();
+	bool sendChunk();
 public:
 	HostSocketHandler(TcpSocket *clientSocket, TcpSocket *hostSocket, Cache *cache, HttpProxy *proxy);
 	~HostSocketHandler();
 
-	void handle(PollResult pollResult);
+	//
+	// returns false if session should be closed
+	//
+	bool handle(PollResult pollResult);
 
 	void finishReadingResponce();
 

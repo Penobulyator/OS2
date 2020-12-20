@@ -24,7 +24,7 @@ private:
 
 	std::queue<messageChunk> messageQueue;
 
-	void sendChunk();
+	bool sendChunk();
 
 	std::ofstream *ofstream;
 public:
@@ -39,6 +39,9 @@ public:
 
 	void notify(messageChunk chunk);
 
-	void handle(PollResult pollresult);
+	//
+	// returns false if session should be closed
+	//
+	bool handle(PollResult pollresult);
 };
 

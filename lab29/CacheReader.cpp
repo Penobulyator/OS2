@@ -2,7 +2,7 @@
 
 
 
-void CacheReader::sendChunk()
+bool CacheReader::sendChunk()
 {
 	if (!messageQueue.empty()) {
 		messageChunk chunk = messageQueue.front();
@@ -10,10 +10,10 @@ void CacheReader::sendChunk()
 
 		int length = writeSocket->_write(chunk.buf, chunk.length);
 		if (length == 0) {
-			proxy->closeSession(writeSocket);
-			return;
+			return false;
 		}
 	}
+	return true;
 }
 
 
@@ -22,6 +22,7 @@ CacheReader::CacheReader(Cache *cache, TcpSocket *writeSocket, HttpProxy *proxy)
 	this->cache = cache;
 	this->writeSocket = writeSocket;
 	this->proxy = proxy;
+	this->url = NULL;
 }
 
 
@@ -67,20 +68,22 @@ void CacheReader::notify(messageChunk chunk){
 	proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
 }
 
-void CacheReader::handle(PollResult pollResult)
+bool CacheReader::handle(PollResult pollResult)
 {
 	if (pollResult.fd != writeSocket->fd)
-		return;
+		return true;
 
 	if (pollResult.revents & POLLHUP) {
-		proxy->closeSession(writeSocket);
-		return;
+		return false;
 	}
 	else if (pollResult.revents & POLLOUT) {
-		sendChunk();
+		if (!sendChunk())
+			return false;
 
 		if (messageQueue.empty()) {
 			proxy->changeEvents(writeSocket, POLLHUP | POLLIN);
 		}
 	}
+
+	return true;
 }
