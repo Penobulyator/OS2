@@ -32,8 +32,6 @@ CacheReader::~CacheReader()
 
 void CacheReader::read(char * url)
 {
-	ofstream = new std::ofstream("index.html");
-
 	this->url = url;
 	if (cache->entryIsFool(url)) {
 		std::cout << "Cache entry for " << url << " is full, sending data from cache" << std::endl;
@@ -51,10 +49,11 @@ void CacheReader::read(char * url)
 
 void CacheReader::stopRead()
 {
-	cache->stopListening(this);
-	url = NULL;
-	ofstream->close();
-	delete ofstream;
+	if (url != NULL) {
+		cache->stopListening(this);
+		url = NULL;
+		std::cout << "Cache reader has finished reading " << url << std::endl;
+	}
 }
 
 bool CacheReader::isReading()

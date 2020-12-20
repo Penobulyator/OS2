@@ -130,6 +130,8 @@ void HostSocketHandler::finishReadingResponce()
 	if (url != NULL) {
 		//notify cache that entry with current url is full
 		cache->makeEntryFull(url);
+
+		std::cout << "HostSocketHandler with hostFd = " << hostSocket->fd << " has finished reading " << url << std::endl;
 	}
 }
 
