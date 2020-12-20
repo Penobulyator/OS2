@@ -48,6 +48,8 @@ public:
 
 	void stopListening(CacheReader *listener);
 
+	void clear();
+
 	Cache();
 	~Cache();
 };

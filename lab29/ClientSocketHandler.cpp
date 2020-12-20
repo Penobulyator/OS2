@@ -20,6 +20,12 @@ bool ClientSocketHandler::parseRequest(char *request) {
 	char *urlStart = strstr(request, "http://");
 	int urlLength = strstr(urlStart, " ") - urlStart - 7;
 
+	if (urlLength < 0) {
+		std::cout << "Got bad url" << std::endl;
+		return false;
+	}
+
+	std::cout << "urlLength = " << urlLength << std::endl;
 	char *url = new char[urlLength + 1];
 	memccpy(url, urlStart + 7, 0, urlLength);
 	url[urlLength] = '\0';

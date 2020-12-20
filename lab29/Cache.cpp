@@ -87,6 +87,16 @@ void Cache::stopListening(CacheReader * listener)
 	}
 }
 
+void Cache::clear()
+{
+	for (cacheEntry cacheEntry : entries) {
+		delete[] cacheEntry.url;
+		for (messageChunk messageChunk : cacheEntry.chunks) {
+			delete[] messageChunk.buf;
+		}
+	}
+}
+
 Cache::Cache()
 {
 }

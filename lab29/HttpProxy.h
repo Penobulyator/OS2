@@ -52,5 +52,7 @@ public:
 	void gotNewResponce(HostSocketHandler *hostSocketHandler);
 
 	void changeEvents(TcpSocket *socket, int events);
+
+	void clear();
 };
 

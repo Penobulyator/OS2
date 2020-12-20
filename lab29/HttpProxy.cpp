@@ -186,3 +186,23 @@ void HttpProxy::changeEvents(TcpSocket *socket, int events)
 {
 	poller.changeEvents(socket->fd, events);
 }
+
+void HttpProxy::clear()
+{
+	for (ProxyEntry proxyEntry : proxyEntries) {
+		delete proxyEntry.cacheReader;
+
+		proxyEntry.clinetSocket->_close();
+		delete proxyEntry.clinetSocket;
+		delete proxyEntry.clientSocketHandler;
+
+		if (proxyEntry.hostSocket != NULL) {
+			proxyEntry.hostSocket->_close();
+			delete proxyEntry.hostSocket;
+			delete proxyEntry.hostSocketHandler;
+		}
+	}
+
+	serverSocket._close();
+	cache->clear();
+}

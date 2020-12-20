@@ -1,6 +1,16 @@
 #include "HttpProxy.h"
+#include <csignal>
+
+HttpProxy *proxy;
+
+void sigHandler(int signal) {
+	proxy->clear();
+	exit(0);
+}
 
 int main(int argc, char** argv){
-	HttpProxy proxy(atoi(argv[1]));
-	proxy.start();
+	proxy = new HttpProxy(atoi(argv[1]));
+	std::signal(SIGINT, sigHandler);
+	proxy->start();
+	return 0;
 }
