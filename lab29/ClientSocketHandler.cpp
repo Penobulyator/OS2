@@ -25,7 +25,6 @@ bool ClientSocketHandler::parseRequest(char *request) {
 		return false;
 	}
 
-	std::cout << "urlLength = " << urlLength << std::endl;
 	char *url = new char[urlLength + 1];
 	memccpy(url, urlStart + 7, 0, urlLength);
 	url[urlLength] = '\0';

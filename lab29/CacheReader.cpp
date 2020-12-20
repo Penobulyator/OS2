@@ -31,13 +31,14 @@ CacheReader::~CacheReader()
 void CacheReader::read(char * url)
 {
 	this->url = url;
-	if (cache->entryIsFool(url)) {
+	std::list<messageChunk> chunks = cache->getChunks(url);
+	for (messageChunk messageChunk : chunks) {
+		messageQueue.push(messageChunk);
+	}
+	proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
+
+	if (cache->entryIsFull(url)) {
 		std::cout << "Cache entry for " << url << " is full, sending data from cache" << std::endl;
-		std::list<messageChunk> chunks = cache->getChunks(url);
-		for (messageChunk messageChunk: chunks) {
-			messageQueue.push(messageChunk);
-		}
-		proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
 	}
 	else {
 		std::cout << "Cache entry for " << url << " isn't full, listening to this URL" << std::endl;
@@ -77,10 +78,8 @@ bool CacheReader::handle(PollResult pollResult)
 		if (!sendChunk())
 			return false;
 
-
-
 		if (messageQueue.empty()) {
-			if (cache->entryIsFool(url)) {
+			if (cache->entryIsFull(url)) {
 				stopRead();
 			}
 			proxy->changeEvents(writeSocket, POLLHUP | POLLIN);

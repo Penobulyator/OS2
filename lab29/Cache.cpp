@@ -23,7 +23,6 @@ void Cache::addChunk(char * url, messageChunk chunk)
 	for (listenerEntry listenerEntry : listeners) {
 		if (strcmp(listenerEntry.url, url) == 0) {
 			listenerEntry.listener->notify(chunk);
-			break;
 		}
 	}
 }
@@ -48,7 +47,7 @@ std::list<messageChunk> Cache::getChunks(char * url)
 	return std::list<messageChunk>();
 }
 
-bool Cache::entryIsFool(char * url)
+bool Cache::entryIsFull(char * url)
 {
 	for (cacheEntry& it: entries) {
 		if (strcmp(it.url, url) == 0) {
@@ -61,9 +60,9 @@ bool Cache::entryIsFool(char * url)
 
 void Cache::makeEntryFull(char * url)
 {
-	for (cacheEntry& it: entries) {
-		if (strcmp(it.url, url) == 0) {
-			it.isFull = true;
+	for (cacheEntry& ref: entries) {
+		if (strcmp(ref.url, url) == 0) {
+			ref.isFull = true;
 			return;
 		}
 	}
