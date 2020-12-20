@@ -40,7 +40,7 @@ public:
 
 	std::list<messageChunk> getChunks(char* url);
 
-	bool entryIsFool(char* url);
+	bool entryIsFull(char* url);
 
 	void makeEntryFull(char* url);
 
