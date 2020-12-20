@@ -34,9 +34,6 @@ private:
 
 	bool parseRequest(char *request);
 
-	int requestNumber = 0;
-	std::ofstream *logOfstream = NULL;
-
 
 public:
 	ClientSocketHandler(TcpSocket *clientSocket, HttpProxy *proxy);

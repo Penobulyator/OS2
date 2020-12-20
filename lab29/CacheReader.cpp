@@ -51,8 +51,8 @@ void CacheReader::stopRead()
 {
 	if (url != NULL) {
 		cache->stopListening(this);
-		url = NULL;
 		std::cout << "Cache reader has finished reading " << url << std::endl;
+		url = NULL;
 	}
 }
 

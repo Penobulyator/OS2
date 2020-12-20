@@ -80,9 +80,6 @@ bool ClientSocketHandler::sendChunk()
 		if (length == 0) {
 			return false;
 		}
-
-		chunk.buf[length] = '\0';
-		*logOfstream << chunk.buf;
 	}
 	return true;
 }
@@ -104,8 +101,6 @@ bool ClientSocketHandler::handle(PollResult pollResult)
 
 				state = READING_REQUEST;
 
-				logOfstream = new std::ofstream(std::string("request").append(std::to_string(requestNumber++).append(".txt")));
-
 				//we have a new request to read
 				return recvFirstRequestChunk();
 
@@ -124,7 +119,7 @@ bool ClientSocketHandler::handle(PollResult pollResult)
 
 				//we can read a chunk from client
 				return recvChunk();
-
+				
 				//wait for host socket to be ready for write
 				if (hostSocket != NULL)
 					proxy->changeEvents(hostSocket, POLLIN | POLLHUP | POLLOUT);
@@ -156,11 +151,6 @@ bool ClientSocketHandler::handle(PollResult pollResult)
 void ClientSocketHandler::waitForRequest()
 {
 	state = WAITING_FOR_REQUEST;
-
-	if (logOfstream != NULL) {
-		logOfstream->close();
-		delete logOfstream;
-	}
 }
 
 void ClientSocketHandler::setHostSocket(TcpSocket * hostSocket)

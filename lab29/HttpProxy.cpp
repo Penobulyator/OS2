@@ -110,6 +110,9 @@ void HttpProxy::closeSession(int proxyEntryIndex)
 		delete proxyEntry.hostSocketHandler;
 	}
 
+	if (proxyEntry.cacheReader->isReading()) {
+		proxyEntry.cacheReader->stopRead();
+	}
 	delete proxyEntry.cacheReader;
 
 	proxyEntries.erase(proxyEntries.begin() + proxyEntryIndex);
