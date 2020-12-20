@@ -43,7 +43,7 @@ bool HostSocketHandler::recvChunk() {
 bool HostSocketHandler::sendChunk()
 {
 	if (!messageQueue.empty()) {
-		messageChunk chunk = messageQueue.back();
+		messageChunk chunk = messageQueue.front();
 		messageQueue.pop();
 
 		int length = clientSocket->_write(chunk.buf, chunk.length);

@@ -1,6 +1,6 @@
 #include "HttpProxy.h"
 #define SOCKET_EVENTS POLLIN | POLLHUP | POLLOUT
-HttpProxy::HttpProxy(int listenPort):
+HttpProxy::HttpProxy(int listenPort) :
 	serverSocket(listenPort)
 {
 	cache = new Cache();
@@ -44,16 +44,16 @@ void HttpProxy::start()
 	fcntl(serverSocket.fd, F_SETFL, O_NONBLOCK);
 	poller.addFd(serverSocket.fd, POLLIN | POLLPRI);
 
-	while(true) {
+	while (true) {
 		poller._poll();
 		std::vector<PollResult> pollResults = poller.getPollResult();
 
-		for (PollResult pollresult: pollResults) {
+		for (PollResult pollresult : pollResults) {
 
 			if (pollresult.fd == serverSocket.fd && pollresult.fd & (POLLIN | POLLPRI)) {
 				acceptClient();
 			}
-			else{
+			else {
 
 				for (int i = 0; i < proxyEntries.size(); i++) {
 					ProxyEntry proxyEnrty = proxyEntries[i];
@@ -124,7 +124,7 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 	std::cout << "Got request for " << url << std::endl;
 	if (!cache->contains(url)) {
 
-		for (ProxyEntry &proxyEntry: proxyEntries) {
+		for (ProxyEntry &proxyEntry : proxyEntries) {
 			if (proxyEntry.clientSocketHandler == clientSocketHandler) {
 
 				//create new hostSocketHandler if necessary

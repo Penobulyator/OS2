@@ -37,7 +37,7 @@ bool Cache::contains(char * url){
 	return false;
 }
 
-std::vector<messageChunk> Cache::getChunks(char * url)
+std::list<messageChunk> Cache::getChunks(char * url)
 {
 	for (cacheEntry& it: entries) {
 		if (strcmp(it.url, url) == 0) {
@@ -45,7 +45,7 @@ std::vector<messageChunk> Cache::getChunks(char * url)
 		}
 	}
 
-	return std::vector<messageChunk>();
+	return std::list<messageChunk>();
 }
 
 bool Cache::entryIsFool(char * url)

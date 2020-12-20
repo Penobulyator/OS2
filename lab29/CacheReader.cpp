@@ -1,7 +1,5 @@
 #include "CacheReader.h"
 
-
-
 bool CacheReader::sendChunk()
 {
 	if (!messageQueue.empty()) {
@@ -35,9 +33,9 @@ void CacheReader::read(char * url)
 	this->url = url;
 	if (cache->entryIsFool(url)) {
 		std::cout << "Cache entry for " << url << " is full, sending data from cache" << std::endl;
-		std::vector<messageChunk> chunks = cache->getChunks(url);
-		for (int i = 0; i < chunks.size(); i++) {
-			messageQueue.push(chunks[i]);
+		std::list<messageChunk> chunks = cache->getChunks(url);
+		for (messageChunk messageChunk: chunks) {
+			messageQueue.push(messageChunk);
 		}
 		proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
 	}
@@ -79,7 +77,12 @@ bool CacheReader::handle(PollResult pollResult)
 		if (!sendChunk())
 			return false;
 
+
+
 		if (messageQueue.empty()) {
+			if (cache->entryIsFool(url)) {
+				stopRead();
+			}
 			proxy->changeEvents(writeSocket, POLLHUP | POLLIN);
 		}
 	}

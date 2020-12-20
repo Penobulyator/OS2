@@ -35,8 +35,6 @@ private:
 
 	std::vector<ProxyEntry> proxyEntries;
 
-	void addHostSocketHandler(TcpSocket *clientSocket, TcpSocket *hostSocket);
-
 	void closeSession(int proxyEntryIndex);
 
 	void acceptClient();
@@ -48,9 +46,6 @@ public:
 	~HttpProxy();
 
 	void start();
-
-
-	void closeSession(TcpSocket *socket);
 
 	void gotNewRequest(ClientSocketHandler *clientSocketHandler, char *url);
 
