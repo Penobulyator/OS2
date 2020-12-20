@@ -18,8 +18,8 @@ HostSocketHandler::~HostSocketHandler()
 
 bool HostSocketHandler::recvChunk() {
 	//read
-	char *buf = new char[CHUNK_SIZE];
-	int length = hostSocket->_read(buf, CHUNK_SIZE);
+	char *buf = new char[MAX_CHUNK_SIZE];
+	int length = hostSocket->_read(buf, MAX_CHUNK_SIZE);
 
 	//buf[length] = '\0';
 	//std::cout << buf;

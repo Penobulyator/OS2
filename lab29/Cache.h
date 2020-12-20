@@ -3,7 +3,7 @@
 #include <list>
 #include <vector>
 #include "CacheReader.h"
-#define CHUNK_SIZE 333
+#define MAX_CHUNK_SIZE 4096
 
 class CacheReader;
 

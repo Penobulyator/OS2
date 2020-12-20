@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
+#include <fstream>
 #include <queue>
+#include <string> 
 
 #include "Cache.h"
 #include "TcpSocket.h"
@@ -31,6 +33,10 @@ private:
 	bool sendChunk();
 
 	bool parseRequest(char *request);
+
+	int requestNumber = 0;
+	std::ofstream *logOfstream = NULL;
+
 
 public:
 	ClientSocketHandler(TcpSocket *clientSocket, HttpProxy *proxy);

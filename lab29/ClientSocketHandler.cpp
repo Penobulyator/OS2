@@ -33,11 +33,8 @@ bool ClientSocketHandler::parseRequest(char *request) {
 
 bool ClientSocketHandler::recvFirstRequestChunk() {
 	//read
-	char *buf = new char[CHUNK_SIZE];
-	int length = clientSocket->_read(buf, CHUNK_SIZE);
-
-	//buf[length] = '\0';
-	//std::cout << buf;
+	char *buf = new char[MAX_CHUNK_SIZE];
+	int length = clientSocket->_read(buf, MAX_CHUNK_SIZE);
 	
 	if (length == 0) {
 		return false;
@@ -56,8 +53,8 @@ bool ClientSocketHandler::recvFirstRequestChunk() {
 
 bool ClientSocketHandler::recvChunk() {
 	//read
-	char *buf = new char[CHUNK_SIZE];
-	int length = clientSocket->_read(buf, CHUNK_SIZE);
+	char *buf = new char[MAX_CHUNK_SIZE];
+	int length = clientSocket->_read(buf, MAX_CHUNK_SIZE);
 
 	if (length == 0) {
 		return false;
@@ -78,10 +75,14 @@ bool ClientSocketHandler::sendChunk()
 		messageChunk chunk = messageQueue.back();
 		messageQueue.pop();
 
+
 		int length = hostSocket->_write(chunk.buf, chunk.length);
 		if (length == 0) {
 			return false;
 		}
+
+		chunk.buf[length] = '\0';
+		*logOfstream << chunk.buf;
 	}
 	return true;
 }
@@ -102,6 +103,8 @@ bool ClientSocketHandler::handle(PollResult pollResult)
 			else if (revents & POLLIN) {
 
 				state = READING_REQUEST;
+
+				logOfstream = new std::ofstream(std::string("request").append(std::to_string(requestNumber++).append(".txt")));
 
 				//we have a new request to read
 				return recvFirstRequestChunk();
@@ -153,6 +156,11 @@ bool ClientSocketHandler::handle(PollResult pollResult)
 void ClientSocketHandler::waitForRequest()
 {
 	state = WAITING_FOR_REQUEST;
+
+	if (logOfstream != NULL) {
+		logOfstream->close();
+		delete logOfstream;
+	}
 }
 
 void ClientSocketHandler::setHostSocket(TcpSocket * hostSocket)
