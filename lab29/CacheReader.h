@@ -1,6 +1,7 @@
 #pragma once
 #include <queue>
 #include <vector>
+#include <fstream>
 
 #include "TcpSocket.h"
 #include "Cache.h"
@@ -24,6 +25,8 @@ private:
 	std::queue<messageChunk> messageQueue;
 
 	void sendChunk();
+
+	std::ofstream *ofstream;
 public:
 	CacheReader(Cache *cache, TcpSocket *writeSocket, HttpProxy *proxy);
 	~CacheReader();
@@ -34,7 +37,7 @@ public:
 
 	bool isReading();
 
-	void notify();
+	void notify(messageChunk chunk);
 
 	void handle(PollResult pollresult);
 };

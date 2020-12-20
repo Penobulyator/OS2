@@ -11,9 +11,18 @@ void Cache::addEntry(char * url)
 
 void Cache::addChunk(char * url, messageChunk chunk)
 {
+	//push chunk
 	for (cacheEntry& it: entries) {
 		if (strcmp(it.url, url) == 0) {
 			it.chunks.push_back(chunk);
+			break;
+		}
+	}
+
+	//notify listeners
+	for (listenerEntry listenerEntry : listeners) {
+		if (strcmp(listenerEntry.url, url) == 0) {
+			listenerEntry.listener->notify(chunk);
 			break;
 		}
 	}
@@ -56,14 +65,6 @@ void Cache::makeEntryFull(char * url)
 		if (strcmp(it.url, url) == 0) {
 			it.isFull = true;
 			return;
-		}
-	}
-
-	//notify listeners
-	for (listenerEntry listenerEntry : listeners) {
-		if (strcmp(listenerEntry.url, url) == 0) {
-			listenerEntry.listener->notify();
-			break;
 		}
 	}
 }

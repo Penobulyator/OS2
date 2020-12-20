@@ -5,7 +5,7 @@
 void CacheReader::sendChunk()
 {
 	if (!messageQueue.empty()) {
-		messageChunk chunk = messageQueue.back();
+		messageChunk chunk = messageQueue.front();
 		messageQueue.pop();
 
 		int length = writeSocket->_write(chunk.buf, chunk.length);
@@ -31,6 +31,8 @@ CacheReader::~CacheReader()
 
 void CacheReader::read(char * url)
 {
+	ofstream = new std::ofstream("index.html");
+
 	this->url = url;
 	if (cache->entryIsFool(url)) {
 		std::cout << "Cache entry for " << url << " is full, sending data from cache" << std::endl;
@@ -48,7 +50,10 @@ void CacheReader::read(char * url)
 
 void CacheReader::stopRead()
 {
+	cache->stopListening(this);
 	url = NULL;
+	ofstream->close();
+	delete ofstream;
 }
 
 bool CacheReader::isReading()
@@ -56,12 +61,9 @@ bool CacheReader::isReading()
 	return url != NULL;
 }
 
-void CacheReader::notify() {
-	std::vector<messageChunk> chunks = cache->getChunks(url);
-	for (int i = 0; i < chunks.size(); i++) {
-		messageQueue.push(chunks[i]);
-	}
-	cache->stopListening(this);
+void CacheReader::notify(messageChunk chunk){
+
+	messageQueue.push(chunk);
 	proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
 }
 
@@ -75,7 +77,6 @@ void CacheReader::handle(PollResult pollResult)
 		return;
 	}
 	else if (pollResult.revents & POLLOUT) {
-		std::cout << "Cache is sending chunk" << std::endl;
 		sendChunk();
 
 		if (messageQueue.empty()) {

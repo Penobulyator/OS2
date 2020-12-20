@@ -115,7 +115,8 @@ void ClientSocketHandler::handle(PollResult pollResult)
 				recvChunk();
 
 				//wait for host socket to be ready for write
-				//proxy->changeEvents(hostSocket, POLLIN | POLLHUP | POLLOUT);
+				if (hostSocket != NULL)
+					proxy->changeEvents(hostSocket, POLLIN | POLLHUP | POLLOUT);
 			}
 		}
 		else if (hostSocket != NULL && fd == hostSocket->fd) {
@@ -130,9 +131,9 @@ void ClientSocketHandler::handle(PollResult pollResult)
 				sendChunk();
 
 				//if queue is empty, don't wait for host socket to be ready for write
-				//if (messageQueue.empty()) {
-				//	proxy->changeEvents(hostSocket, POLLIN | POLLHUP);
-				//}
+				if (messageQueue.empty()) {
+					proxy->changeEvents(hostSocket, POLLIN | POLLHUP);
+				}
 			}
 		}
 		break;
