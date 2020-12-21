@@ -1,7 +1,7 @@
 all: proxy
 
 proxy: main.o ClientSocketHandler.o HostSocketHandler.o HttpProxy.o Poller.o ServerSocket.o TcpSocket.o Cache.o CacheReader.o
-	g++ -std=c++0x main.o ClientSocketHandler.o HostSocketHandler.o HttpProxy.o Poller.o ServerSocket.o TcpSocket.o Cache.o CacheReader.o -o proxy  -lsocket -lnsl
+	g++ -std=c++0x main.o ClientSocketHandler.o HostSocketHandler.o HttpProxy.o Poller.o ServerSocket.o TcpSocket.o Cache.o CacheReader.o -o proxy -lsocket -lnsl
 
 main.o: main.cpp
 	g++ -c main.cpp

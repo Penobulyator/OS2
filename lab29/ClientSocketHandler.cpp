@@ -161,3 +161,8 @@ void ClientSocketHandler::setHostSocket(TcpSocket * hostSocket)
 {
 	this->hostSocket = hostSocket;
 }
+
+int ClientSocketHandler::getClientFd()
+{
+	return clientSocket->fd;
+}

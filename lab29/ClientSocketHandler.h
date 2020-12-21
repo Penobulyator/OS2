@@ -47,5 +47,7 @@ public:
 	void waitForRequest();
 
 	void setHostSocket(TcpSocket *hostSocket);
+
+	int getClientFd();
 };
 
