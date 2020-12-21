@@ -17,17 +17,14 @@ bool ClientSocketHandler::parseRequest(char *request) {
 	}
 
 	//find url
-	char *urlStart = strstr(request, "http://");
-	int urlLength = strstr(urlStart, " ") - urlStart - 7;
+	char *urlStart = strstr(request, "http://") + 7;
 
-	if (urlLength < 0) {
-		std::cout << "Got bad url" << std::endl;
-		return false;
+	char *url = new char[256];
+	int i;
+	for (i = 0; urlStart[i] != ' '; i++) {
+		url[i] = urlStart[i];
 	}
-
-	char *url = new char[urlLength + 1];
-	memccpy(url, urlStart + 7, 0, urlLength);
-	url[urlLength] = '\0';
+	url[i] = '\0';
 
 	//notify proxy about new request
 	proxy->gotNewRequest(this, url);
