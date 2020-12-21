@@ -3,7 +3,10 @@
 ServerSocket::ServerSocket(int port)
 {
 	fd = socket(AF_INET, SOCK_STREAM, 0);
-	setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+
+	int enable = 1;
+	setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
+
 	struct sockaddr_in serv_addr;
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;

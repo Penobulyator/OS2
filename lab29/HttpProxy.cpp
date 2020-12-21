@@ -146,7 +146,6 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 					std::cout << "Reconnecting host socket with fd = " << proxyEntry.hostSocket->fd << " from " << proxyEntry.hostSocket->getHostName() << " to " << hostName << std::endl;
 					proxyEntry.hostSocket->_connect(hostName, 80);
 				}
-				delete[] hostName;
 
 				//stop response reading
 				if (proxyEntry.cacheReader->isReading()) {
