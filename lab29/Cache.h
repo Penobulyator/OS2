@@ -4,7 +4,7 @@
 #include <vector>
 #include <queue>
 #include "CacheReader.h"
-#define MAX_CHUNK_SIZE 1 << 5
+#define MAX_CHUNK_SIZE 1 << 16
 
 class CacheReader;
 

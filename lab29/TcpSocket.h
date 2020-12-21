@@ -28,8 +28,12 @@ public:
 
 	void _close();
 
+	char *hostName;
+
 	TcpSocket();
 	TcpSocket(int fd);
 	~TcpSocket();
+
+	char* getHostName();
 };
 

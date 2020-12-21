@@ -17,6 +17,11 @@ TcpSocket::~TcpSocket()
 {
 }
 
+char * TcpSocket::getHostName()
+{
+	return hostName;
+}
+
 void TcpSocket::resolveHostName(char * hostName, addrinfo **res)
 {
 	struct addrinfo hints;
@@ -31,6 +36,7 @@ void TcpSocket::resolveHostName(char * hostName, addrinfo **res)
 
 void TcpSocket::_connect(char *hostName, int port)
 {
+	this->hostName = hostName;
 	struct addrinfo *hostAddrinfo;
 	resolveHostName(hostName, &hostAddrinfo);
 	if (connect(fd, hostAddrinfo->ai_addr, hostAddrinfo->ai_addrlen) != 0) {
