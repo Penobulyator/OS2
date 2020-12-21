@@ -92,7 +92,7 @@ bool HostSocketHandler::handle(PollResult pollResult)
 			else if (revents & POLLIN) {
 				
 				//for client socket to be ready for write
-				proxy->changeEvents(clientSocket, POLLIN | POLLHUP | POLLOUT);
+				//proxy->changeEvents(clientSocket, POLLIN | POLLHUP | POLLOUT);
 
 				//we can read a chunk from client
 				return recvChunk();
@@ -111,9 +111,9 @@ bool HostSocketHandler::handle(PollResult pollResult)
 					return false;
 
 				//if queue is empty, don't wait for client socket to be ready for write
-				if (messageQueue.empty()) {
-					proxy->changeEvents(clientSocket, POLLIN | POLLHUP);
-				}
+				//if (messageQueue.empty()) {
+				//	proxy->changeEvents(clientSocket, POLLIN | POLLHUP);
+				//}
 
 			}
 		}

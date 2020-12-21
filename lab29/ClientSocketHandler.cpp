@@ -125,8 +125,8 @@ bool ClientSocketHandler::handle(PollResult pollResult)
 				return recvChunk();
 				
 				//wait for host socket to be ready for write
-				if (hostSocket != NULL)
-					proxy->changeEvents(hostSocket, POLLIN | POLLHUP | POLLOUT);
+				//if (hostSocket != NULL)
+				//	proxy->changeEvents(hostSocket, POLLIN | POLLHUP | POLLOUT);
 			}
 		}
 		else if (hostSocket != NULL && fd == hostSocket->fd) {
@@ -142,9 +142,9 @@ bool ClientSocketHandler::handle(PollResult pollResult)
 					return false;
 
 				//if queue is empty, don't wait for host socket to be ready for write
-				if (messageQueue.empty()) {
-					proxy->changeEvents(hostSocket, POLLIN | POLLHUP);
-				}
+				//if (messageQueue.empty()) {
+				//	proxy->changeEvents(hostSocket, POLLIN | POLLHUP);
+				//}
 
 			}
 		}

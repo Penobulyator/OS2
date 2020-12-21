@@ -32,7 +32,7 @@ void CacheReader::read(char * url)
 {
 	this->url = url;
 	messageQueue = cache->getChunks(url);
-	proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
+	//proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
 
 	if (cache->entryIsFull(url)) {
 		std::cout << "Cache reader with write socket fd = " << writeSocket->fd << " is reading " << url  << " (entry for this URL is full)" << std::endl;
@@ -60,7 +60,7 @@ bool CacheReader::isReading()
 void CacheReader::notify(messageChunk chunk){
 
 	messageQueue.push(chunk);
-	proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
+	//proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
 }
 
 bool CacheReader::handle(PollResult pollResult)
@@ -79,7 +79,7 @@ bool CacheReader::handle(PollResult pollResult)
 			if (cache->entryIsFull(url)) {
 				stopRead();
 			}
-			proxy->changeEvents(writeSocket, POLLHUP | POLLIN);
+			//proxy->changeEvents(writeSocket, POLLHUP | POLLIN);
 		}
 	}
 
