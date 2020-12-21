@@ -31,10 +31,7 @@ CacheReader::~CacheReader()
 void CacheReader::read(char * url)
 {
 	this->url = url;
-	std::list<messageChunk> chunks = cache->getChunks(url);
-	for (messageChunk messageChunk : chunks) {
-		messageQueue.push(messageChunk);
-	}
+	messageQueue = cache->getChunks(url);
 	proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
 
 	if (cache->entryIsFull(url)) {

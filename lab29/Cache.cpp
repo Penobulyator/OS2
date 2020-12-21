@@ -14,7 +14,7 @@ void Cache::addChunk(char * url, messageChunk chunk)
 	//push chunk
 	for (cacheEntry& it: entries) {
 		if (strcmp(it.url, url) == 0) {
-			it.chunks.push_back(chunk);
+			it.chunks.push(chunk);
 			break;
 		}
 	}
@@ -36,7 +36,7 @@ bool Cache::contains(char * url){
 	return false;
 }
 
-std::list<messageChunk> Cache::getChunks(char * url)
+std::queue<messageChunk> Cache::getChunks(char * url)
 {
 	for (cacheEntry& it: entries) {
 		if (strcmp(it.url, url) == 0) {
@@ -44,7 +44,7 @@ std::list<messageChunk> Cache::getChunks(char * url)
 		}
 	}
 
-	return std::list<messageChunk>();
+	return std::queue<messageChunk>();
 }
 
 bool Cache::entryIsFull(char * url)
@@ -90,8 +90,10 @@ void Cache::clear()
 {
 	for (cacheEntry cacheEntry : entries) {
 		delete[] cacheEntry.url;
-		for (messageChunk messageChunk : cacheEntry.chunks) {
-			delete[] messageChunk.buf;
+		while (!cacheEntry.chunks.empty()) {
+			delete[] cacheEntry.chunks.front().buf;
+			delete[] cacheEntry.url;
+			cacheEntry.chunks.pop();
 		}
 	}
 }

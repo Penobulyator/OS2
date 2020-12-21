@@ -2,6 +2,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <queue>
 #include "CacheReader.h"
 #define MAX_CHUNK_SIZE 1 << 5
 
@@ -14,7 +15,7 @@ typedef struct messageChunk {
 
 typedef struct cacheEntry {
 	char *url;
-	std::list<messageChunk> chunks;
+	std::queue<messageChunk> chunks;
 	bool isFull;
 }cacheEntry;
 
@@ -38,7 +39,7 @@ public:
 
 	bool contains(char* url);
 
-	std::list<messageChunk> getChunks(char* url);
+	std::queue<messageChunk> getChunks(char* url);
 
 	bool entryIsFull(char* url);
 

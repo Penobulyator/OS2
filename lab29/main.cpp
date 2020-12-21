@@ -5,6 +5,7 @@ HttpProxy *proxy;
 
 void sigHandler(int signal) {
 	proxy->clear();
+	delete proxy;
 	exit(0);
 }
 
