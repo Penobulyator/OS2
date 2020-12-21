@@ -129,22 +129,35 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 
 
 					//open hostSocket
-					TcpSocket *hostSocket = new TcpSocket();
+					proxyEntry.hostSocket = new TcpSocket();
 					hostSocket->_connect(hostName, 80);
 					fcntl(hostSocket->fd, F_SETFL, O_NONBLOCK);
 					poller.addFd(hostSocket->fd, SOCKET_EVENTS);
 					std::cout << "Adding host socket: fd = " << hostSocket->fd << ", hostname = " << hostName << ", pair client socket = " << proxyEntry.clinetSocket->fd << std::endl;
 					
 
-					clientSocketHandler->setHostSocket(hostSocket);
-					proxyEntry.hostSocket = hostSocket;
+					clientSocketHandler->setHostSocket(proxyEntry.hostSocket);
 
 					proxyEntry.hostSocketHandler = new HostSocketHandler(proxyEntry.clinetSocket, proxyEntry.hostSocket, cache, this);
 				}
 				else if (strcmp(hostName, proxyEntry.hostSocket->getHostName()) != 0) {
 					//client requested data from other URL, reconnect host socket
 					std::cout << "Reconnecting host socket with fd = " << proxyEntry.hostSocket->fd << " from " << proxyEntry.hostSocket->getHostName() << " to " << hostName << std::endl;
+
+					//close old socket
+					int oldFd = proxyEntry.hostSocket->fd;
+					proxyEntry.hostSocket->_close();
+					poller.removeFd(oldFd);
+					delete proxyEntry.hostSocket;
+
+					//open new socket
+					proxyEntry.hostSocket = new TcpSocket();
 					proxyEntry.hostSocket->_connect(hostName, 80);
+					fcntl(proxyEntry.hostSocket->fd, F_SETFL, O_NONBLOCK);
+					poller.addFd(proxyEntry.hostSocket->fd, SOCKET_EVENTS);
+					clientSocketHandler->setHostSocket(proxyEntry.hostSocket);
+
+					std::cout << "New fd for host socket with fd = " << oldFd << " is " << proxyEntry.hostSocket->fd << std::endl;
 				}
 
 				//stop response reading
