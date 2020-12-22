@@ -77,7 +77,7 @@ bool CacheReader::handle(PollResult pollResult)
 
 		if (messageQueue.empty()) {
 			if (cache->entryIsFull(url)) {
-				stopRead();
+				//stopRead();
 			}
 			//proxy->changeEvents(writeSocket, POLLHUP | POLLIN);
 		}

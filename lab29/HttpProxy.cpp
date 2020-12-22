@@ -113,7 +113,7 @@ void HttpProxy::closeSession(int proxyEntryIndex)
 
 void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *url)
 {
-	std::cout << "Got request for" << url << " from client client socket with fd = " << clientSocketHandler->getClientFd() << std::endl;
+	std::cout << "Got request for " << url << " from client socket with fd = " << clientSocketHandler->getClientFd() << std::endl;
 	if (!cache->contains(url)) {
 
 		for (ProxyEntry &proxyEntry : proxyEntries) {
@@ -130,10 +130,10 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 
 					//open hostSocket
 					proxyEntry.hostSocket = new TcpSocket();
-					hostSocket->_connect(hostName, 80);
-					fcntl(hostSocket->fd, F_SETFL, O_NONBLOCK);
-					poller.addFd(hostSocket->fd, SOCKET_EVENTS);
-					std::cout << "Adding host socket: fd = " << hostSocket->fd << ", hostname = " << hostName << ", pair client socket = " << proxyEntry.clinetSocket->fd << std::endl;
+					proxyEntry.hostSocket->_connect(hostName, 80);
+					fcntl(proxyEntry.hostSocket->fd, F_SETFL, O_NONBLOCK);
+					poller.addFd(proxyEntry.hostSocket->fd, SOCKET_EVENTS);
+					std::cout << "Adding host socket: fd = " << proxyEntry.hostSocket->fd << ", hostname = " << hostName << ", pair client socket = " << proxyEntry.clinetSocket->fd << std::endl;
 					
 
 					clientSocketHandler->setHostSocket(proxyEntry.hostSocket);
@@ -141,7 +141,7 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 					proxyEntry.hostSocketHandler = new HostSocketHandler(proxyEntry.clinetSocket, proxyEntry.hostSocket, cache, this);
 				}
 				else if (strcmp(hostName, proxyEntry.hostSocket->getHostName()) != 0) {
-					//client requested data from other URL, reconnect host socket
+					//client requested data from other host, reconnect host socket
 					std::cout << "Reconnecting host socket with fd = " << proxyEntry.hostSocket->fd << " from " << proxyEntry.hostSocket->getHostName() << " to " << hostName << std::endl;
 
 					//close old socket
