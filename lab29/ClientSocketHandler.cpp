@@ -19,7 +19,7 @@ bool ClientSocketHandler::parseRequest(char *request) {
 	//find url
 	char *urlStart = strstr(request, "http://") + 7;
 
-	char *url = new char[256];
+	char *url = new char[2048];
 	int i;
 	for (i = 0; urlStart[i] != ' '; i++) {
 		url[i] = urlStart[i];
