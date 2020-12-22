@@ -31,16 +31,6 @@ void Poller::removeFd(int fd)
 	}
 }
 
-void Poller::changeEvents(int fd, int events)
-{
-	for (int i = 0; i < fdVector.size(); i++) {
-		if (fdVector[i].fd == fd) {
-			fdVector[i].events = events;
-			break;
-		}
-	}
-}
-
 void Poller::_poll()
 {
 	for (int i = 0; i < fdVector.size(); i++) {

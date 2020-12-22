@@ -60,7 +60,6 @@ bool CacheReader::isReading()
 void CacheReader::notify(messageChunk chunk){
 
 	messageQueue.push(chunk);
-	//proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
 }
 
 bool CacheReader::handle(PollResult pollResult)
@@ -72,15 +71,7 @@ bool CacheReader::handle(PollResult pollResult)
 		return false;
 	}
 	else if (pollResult.revents & POLLOUT) {
-		if (!sendChunk())
-			return false;
-
-		if (messageQueue.empty()) {
-			if (cache->entryIsFull(url)) {
-				//stopRead();
-			}
-			//proxy->changeEvents(writeSocket, POLLHUP | POLLIN);
-		}
+		return sendChunk();
 	}
 
 	return true;

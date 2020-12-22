@@ -193,11 +193,6 @@ void HttpProxy::gotNewResponce(HostSocketHandler *hostSocketHandler)
 	}
 }
 
-void HttpProxy::changeEvents(TcpSocket *socket, int events)
-{
-	poller.changeEvents(socket->fd, events);
-}
-
 void HttpProxy::clear()
 {
 	for (ProxyEntry proxyEntry : proxyEntries) {

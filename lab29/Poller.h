@@ -22,8 +22,6 @@ public:
 
 	void removeFd(int fd);
 
-	void changeEvents(int fd, int events);
-
 	void _poll();
 
 	std::vector<PollResult> getPollResult();
