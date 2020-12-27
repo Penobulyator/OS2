@@ -66,6 +66,7 @@ void HttpProxy::closeSession(int proxyEntryIndex)
 
 void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *url)
 {
+	std::unique_lock<std::mutex> locker(proxyEntriesMutex);
 	std::cout << "Got request for " << url << " from client socket with fd = " << clientSocketHandler->getClientFd() << std::endl;
 	if (true) {
 		for (ProxyEntry &proxyEntry : proxyEntries) {
@@ -142,6 +143,7 @@ void HttpProxy::closeSession(TcpSocket * socket)
 
 void HttpProxy::clear()
 {
+	std::unique_lock<std::mutex> locker(proxyEntriesMutex);
 	for (ProxyEntry proxyEntry : proxyEntries) {
 		delete proxyEntry.cacheReader;
 
