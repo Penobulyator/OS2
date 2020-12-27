@@ -68,7 +68,7 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 {
 	std::unique_lock<std::mutex> locker(proxyEntriesMutex);
 	std::cout << "Got request for " << url << " from client socket with fd = " << clientSocketHandler->getClientFd() << std::endl;
-	if (true) {
+	if (!cache->contains(url)) {
 		for (ProxyEntry &proxyEntry : proxyEntries) {
 			if (proxyEntry.clientSocketHandler == clientSocketHandler) {
 

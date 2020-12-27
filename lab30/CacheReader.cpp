@@ -7,7 +7,7 @@ CacheReader::CacheReader(Cache *cache, TcpSocket *writeSocket, HttpProxy *proxy)
 	this->proxy = proxy;
 	this->url = NULL;
 
-	//this->runningThread = new std::thread(&CacheReader::run, this);
+	this->runningThread = new std::thread(&CacheReader::run, this);
 }
 
 CacheReader::~CacheReader()
@@ -19,7 +19,7 @@ void CacheReader::read(char * url)
 	this->url = url;
 	std::unique_lock<std::mutex> locker(queueMutex);
 
-	std::queue<messageChunk> curChunks = cache->getChunks(url);
+	messageQueue = cache->getChunks(url);
 	//proxy->changeEvents(writeSocket, POLLHUP | POLLIN | POLLOUT);
 
 	if (cache->entryIsFull(url)) {
@@ -39,16 +39,17 @@ void CacheReader::run()
 	std::cout << "Cache reader thread with write socket fd = " << writeSocket->fd << " is running " << std::endl;
 	while (true)
 	{
+		std::unique_lock<std::mutex> locker(queueMutex);
 		//wait untill queue is not empty
-		std::cout << "Here0" << std::endl;
 		while (!queueHasData) {
 			//std::cout << "Here1" << std::endl;
-			//queueCondVar.wait(locker);
+			queueCondVar.wait(locker);
 			//std::cout << "Here2" << std::endl;
 		}
-		std::cout << "Here3" << std::endl;
 
 		//send chunks from queue
+		std::cout << "Writing" << std::endl;
+		std::cout << "messageQueue.size() = " << messageQueue.size() << std::endl;
 		while (!messageQueue.empty()) {
 
 			messageChunk chunk = messageQueue.front();
@@ -58,6 +59,8 @@ void CacheReader::run()
 			if (length == 0) {
 				proxy->closeSession(writeSocket);
 			}
+			chunk.buf[chunk.length] = '\0';
+			std::cout << chunk.buf;
 		}
 		queueHasData = false;
 	}
