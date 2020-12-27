@@ -4,16 +4,10 @@
 #include "HttpProxy.h"
 
 #include <queue>
-#include <pthread.h>
+#include <thread>
 class HttpProxy;
 class Cache;
 struct messageChunk;
-
-enum HostSocketHandlerState
-{
-	WAITING_FOR_RESPONCE,
-	READING_RESPONCE
-};
 
 class HostSocketHandler
 {
@@ -23,25 +17,16 @@ private:
 
 	HttpProxy *proxy;
 
-	HostSocketHandlerState state;
-
 	Cache *cache;
-
-	std::thread *thread = NULL;
 
 	char* url;
 
-	void recvChunk();
+	std::thread *runningThread;
 
-	void terminate();
+	void run();
 public:
 	HostSocketHandler(TcpSocket *clientSocket, TcpSocket *hostSocket, Cache *cache, HttpProxy *proxy);
 	~HostSocketHandler();
-
-	//
-	// returns false if session should be closed
-	//
-	void run();
 
 	void finishReadingResponce();
 

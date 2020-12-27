@@ -3,19 +3,12 @@
 #include <fstream>
 #include <queue>
 #include <string> 
-#include <pthread.h>
 
 #include "Cache.h"
 #include "TcpSocket.h"
 #include "HttpProxy.h"
 class HttpProxy;
 struct messageChunk;
-
-enum ClinetSocketHandlerState
-{
-	WAITING_FOR_REQUEST,
-	READING_REQUEST
-};
 
 class ClientSocketHandler
 {
@@ -24,25 +17,15 @@ private:
 	TcpSocket *hostSocket = NULL;
 	HttpProxy *proxy;
 
-	std::thread *thread = NULL;
-
-	ClinetSocketHandlerState state;
-
-	void recvFirstRequestChunk();
-	void recvChunk();
-
-	void parseRequest(char *request);
-
-	void terminate();
-public:
-	ClientSocketHandler(TcpSocket *clientSocket, HttpProxy *proxy);
-	~ClientSocketHandler();
+	bool parseRequest(char *request);
 
 	void run();
 
-	void startThread();
+	std::thread *runningThread;
 
-	void waitForRequest();
+public:
+	ClientSocketHandler(TcpSocket *clientSocket, HttpProxy *proxy);
+	~ClientSocketHandler();
 
 	void setHostSocket(TcpSocket *hostSocket);
 

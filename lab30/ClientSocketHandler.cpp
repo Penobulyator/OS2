@@ -3,110 +3,63 @@
 ClientSocketHandler::ClientSocketHandler(TcpSocket * clientSocket, HttpProxy *proxy):
 	clientSocket(clientSocket), proxy(proxy)
 {
-	waitForRequest();
+	this->runningThread = new std::thread(&ClientSocketHandler::run, this);
 }
 
 ClientSocketHandler::~ClientSocketHandler()
 {
 }
 
-void ClientSocketHandler::parseRequest(char *request) {
+bool ClientSocketHandler::parseRequest(char *request) {
 	//check if it's a GET request
-	if (strstr(request, "GET") != request) {
-		this->terminate();
+	if (strstr(request, "GET") == request) {
+		//find url
+		char *urlStart = strstr(request, "http://") + 7;
+
+		char *url = new char[2048];
+		int i;
+		for (i = 0; urlStart[i] != ' '; i++) {
+			url[i] = urlStart[i];
+		}
+		url[i] = '\0';
+
+		//notify proxy about new request
+		proxy->gotNewRequest(this, url);
+	}
+	else if (strstr(request, "CONNECT") == request) {
+		return false;
 	}
 
-	//find url
-	char *urlStart = strstr(request, "http://") + 7;
+	return true;
 
-	char *url = new char[2048];
-	int i;
-	for (i = 0; urlStart[i] != ' '; i++) {
-		url[i] = urlStart[i];
-	}
-	url[i] = '\0';
-
-	//notify proxy about new request
-	proxy->gotNewRequest(this, url);
 }
 
-void ClientSocketHandler::terminate()
-{
-	proxy->closeSession(clientSocket);
-	std::terminate();
-}
+void ClientSocketHandler::run() {
+	while (true) {
 
+		//read
+		char *buf = new char[MAX_CHUNK_SIZE];
+		int length = clientSocket->_read(buf, MAX_CHUNK_SIZE);
+		if (length <= 0) {
+			proxy->closeSession(clientSocket);
+			return;
+		}
+		
+		//parse
+		if (!parseRequest(buf)) {
+			proxy->closeSession(clientSocket);
+			return;
+		}
 
-void ClientSocketHandler::recvFirstRequestChunk() {
-	//read
-	char *buf = new char[MAX_CHUNK_SIZE];
-	int length = clientSocket->_read(buf, MAX_CHUNK_SIZE);
-	
-	if (length <= 0) {
-		this->terminate();
-	}
-
-	//parse
-	parseRequest(buf);
-
-	//write
-	length = hostSocket->_write(buf, MAX_CHUNK_SIZE);
-
-	if (length <= 0) {
-		this->terminate();
-	}
-}
-
-void ClientSocketHandler::recvChunk() {
-	//read
-	char *buf = new char[MAX_CHUNK_SIZE];
-	int length = clientSocket->_read(buf, MAX_CHUNK_SIZE);
-
-	if (length <= 0) {
-		this->terminate();
-	}
-
-	//write
-	length = hostSocket->_write(buf, MAX_CHUNK_SIZE);
-
-	if (length <= 0) {
-		this->terminate();
-	}
-}
-
-void ClientSocketHandler::run()
-{
-	while (true)
-	{
-		switch (state)
-		{
-		case WAITING_FOR_REQUEST:
-			state = READING_REQUEST;
-
-			recvFirstRequestChunk();
-			break;
-
-		case READING_REQUEST:
-			recvChunk();
-			break;
+		//write
+		if (hostSocket != NULL) {
+			length = hostSocket->_write(buf, length);
+			if (length <= 0) {
+				proxy->closeSession(hostSocket);
+				return;
+			}
 		}
 	}
-}
-
-void ClientSocketHandler::startThread()
-{
-	if (thread != NULL)
-		delete thread;
-	thread = new std::thread(&ClientSocketHandler::run, this);
-}
-
-void ClientSocketHandler::waitForRequest()
-{
-	state = WAITING_FOR_REQUEST;
-
-	//delete thread;
-	thread = new std::thread(&ClientSocketHandler::run, this);
-	thread->detach();
 }
 
 void ClientSocketHandler::setHostSocket(TcpSocket * hostSocket)

@@ -14,7 +14,7 @@ HostSocketHandler.o: HostSocketHandler.cpp
 
 HttpProxy.o: HttpProxy.cpp
 	g++ -c HttpProxy.cpp
-
+	
 Cache.o: Cache.cpp
 	g++ -c Cache.cpp
 

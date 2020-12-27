@@ -4,6 +4,10 @@ ServerSocket::ServerSocket(int port)
 {
 	fd = socket(AF_INET, SOCK_STREAM, 0);
 
+	if (fd == -1) {
+		perror("server socket");
+	}
+
 	int enable = 1;
 	setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
 

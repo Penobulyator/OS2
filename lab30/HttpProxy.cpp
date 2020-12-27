@@ -1,5 +1,4 @@
 #include "HttpProxy.h"
-#define SOCKET_EVENTS POLLIN | POLLHUP | POLLOUT
 HttpProxy::HttpProxy(int listenPort) :
 	serverSocket(listenPort)
 {
@@ -15,41 +14,32 @@ void HttpProxy::acceptClient() {
 	//accept
 	TcpSocket *clientSocket = new TcpSocket(serverSocket._accept());
 
-	std::cout << "Adding client socket, fd = " << clientSocket->fd << std::endl;
+	if (clientSocket->fd == -1) {
+		perror("accept");
+	}
 
+	std::cout << "Adding client socket, fd = " << clientSocket->fd << std::endl;
+	std::unique_lock<std::mutex> locker(proxyEntriesMutex);
 	//create proxy entry
 	ProxyEntry proxyEntry;
-
 	proxyEntry.clinetSocket = clientSocket;
-	proxyEntry.hostSocket = NULL;
-
 	proxyEntry.clientSocketHandler = new ClientSocketHandler(clientSocket, this);
+	proxyEntry.hostSocket = NULL;
 	proxyEntry.hostSocketHandler = NULL;
-
-	//proxyEntry.cacheReader = new CacheReader(cache, clientSocket, this);
+	proxyEntry.cacheReader = new CacheReader(cache, clientSocket, this);
 
 	proxyEntries.push_back(proxyEntry);
 }
 
 void HttpProxy::start()
 {
-	while (true) {
+	while (true) {	
 		acceptClient();
 	}
 }
 
-void HttpProxy::closeSession(TcpSocket * socket)
+void HttpProxy::closeSession(int proxyEntryIndex)
 {
-	for (int i = 0; i < proxyEntries.size(); i++) {
-		if (proxyEntries[i].clinetSocket == socket && proxyEntries[i].hostSocket == socket) {
-			closeProxyEntry(i);
-		}
-	}
-}
-
-void HttpProxy::closeProxyEntry(int proxyEntryIndex)
-{
-
 	ProxyEntry proxyEntry = proxyEntries[proxyEntryIndex];
 
 	std::cout << "Closing client socket: fd = " << proxyEntry.clinetSocket->fd << std::endl;
@@ -77,8 +67,7 @@ void HttpProxy::closeProxyEntry(int proxyEntryIndex)
 void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *url)
 {
 	std::cout << "Got request for " << url << " from client socket with fd = " << clientSocketHandler->getClientFd() << std::endl;
-	if (!cache->contains(url)) {
-
+	if (true) {
 		for (ProxyEntry &proxyEntry : proxyEntries) {
 			if (proxyEntry.clientSocketHandler == clientSocketHandler) {
 
@@ -87,8 +76,6 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 				char *hostName = new char[hostNameLength + 1];
 				memccpy(hostName, url, 0, hostNameLength);
 				hostName[hostNameLength] = '\0';
-
-				//if entry has no hostSocket, add it
 				if (proxyEntry.hostSocket == NULL) {
 					//entry has no host socket, open socket and connect to host
 
@@ -97,13 +84,12 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 					proxyEntry.hostSocket->_connect(hostName, 80);
 					std::cout << "Adding host socket: fd = " << proxyEntry.hostSocket->fd << ", hostname = " << hostName << ", pair client socket = " << proxyEntry.clinetSocket->fd << std::endl;
 					
+
 					clientSocketHandler->setHostSocket(proxyEntry.hostSocket);
 
 					proxyEntry.hostSocketHandler = new HostSocketHandler(proxyEntry.clinetSocket, proxyEntry.hostSocket, cache, this);
 				}
 				else if (strcmp(hostName, proxyEntry.hostSocket->getHostName()) != 0) {
-					//TODO: need fixes
-
 					//client requested data from other host, reconnect host socket
 					std::cout << "Reconnecting host socket with fd = " << proxyEntry.hostSocket->fd << " from " << proxyEntry.hostSocket->getHostName() << " to " << hostName << std::endl;
 
@@ -120,12 +106,14 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 					std::cout << "New fd for host socket with fd = " << oldFd << " is " << proxyEntry.hostSocket->fd << std::endl;
 				}
 
-				//stop response reading and start a new one
-				//if (proxyEntry.cacheReader->isReading()) {
-				//	proxyEntry.cacheReader->stopRead();
-				//}
-
-				proxyEntry.hostSocketHandler->waitForNextResponce(url);
+				//stop response reading
+				if (proxyEntry.cacheReader->isReading()) {
+					proxyEntry.cacheReader->stopRead();
+				}
+				else {
+					proxyEntry.hostSocketHandler->finishReadingResponce();
+					proxyEntry.hostSocketHandler->waitForNextResponce(url);
+				}
 				break;
 			}
 		}
@@ -134,9 +122,6 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 		std::cout << "Data for " << url << " is in cache" << std::endl;
 		for (ProxyEntry &proxyEntry : proxyEntries) {
 			if (proxyEntry.clientSocketHandler == clientSocketHandler) {
-				if (proxyEntry.cacheReader->isReading()) {
-					proxyEntry.cacheReader->stopRead();
-				}
 				proxyEntry.cacheReader->read(url);
 			}
 		}
@@ -144,12 +129,13 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 
 }
 
-void HttpProxy::gotNewResponce(HostSocketHandler *hostSocketHandler)
+void HttpProxy::closeSession(TcpSocket * socket)
 {
-	for (ProxyEntry proxyEntry : proxyEntries) {
-		if (proxyEntry.hostSocketHandler == hostSocketHandler) {
-			proxyEntry.clientSocketHandler->waitForRequest();
-			break;
+	std::unique_lock<std::mutex> locker(proxyEntriesMutex);
+	for (int i = 0; i < proxyEntries.size(); i++) {
+		if (proxyEntries[i].clinetSocket == socket || proxyEntries[i].hostSocket == socket) {
+			closeSession(i);
+			return;
 		}
 	}
 }

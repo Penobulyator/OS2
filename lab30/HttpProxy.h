@@ -1,7 +1,4 @@
 #pragma once
-#include <fcntl.h>
-#include <thread>
-
 #include "ServerSocket.h"
 #include "ClientSocketHandler.h"
 #include "HostSocketHandler.h"
@@ -31,10 +28,10 @@ private:
 
 	Cache *cache;
 
+	std::mutex proxyEntriesMutex;
 	std::vector<ProxyEntry> proxyEntries;
 
-
-	void closeProxyEntry(int proxyEntryIndex);
+	void closeSession(int proxyEntryIndex);
 
 	void acceptClient();
 
@@ -45,8 +42,6 @@ public:
 	void start();
 
 	void gotNewRequest(ClientSocketHandler *clientSocketHandler, char *url);
-
-	void gotNewResponce(HostSocketHandler *hostSocketHandler);
 
 	void closeSession(TcpSocket *socket);
 

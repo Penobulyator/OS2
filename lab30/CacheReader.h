@@ -2,8 +2,9 @@
 #include <queue>
 #include <vector>
 #include <iostream>
-#include <condition_variable>
+#include <thread>
 #include <mutex>
+#include <condition_variable>
 
 #include "TcpSocket.h"
 #include "Cache.h"
@@ -24,13 +25,14 @@ private:
 
 	char *url;
 
-	bool exit = 0;
-	std::mutex exitMutex;
-	std::condition_variable exitCond;
+	bool queueHasData = false;
+	std::mutex queueMutex;
+	std::condition_variable queueCondVar;
+	std::queue<messageChunk> messageQueue;
 
-	void sendChunk(messageChunk chunk);
+	std::thread *runningThread;
 
-	void terminate();
+	void run();
 
 public:
 	CacheReader(Cache *cache, TcpSocket *writeSocket, HttpProxy *proxy);

@@ -3,6 +3,7 @@
 #include <list>
 #include <vector>
 #include <queue>
+
 #include "CacheReader.h"
 #define MAX_CHUNK_SIZE 1 << 16
 
@@ -27,8 +28,10 @@ typedef struct listenerEntry {
 class Cache
 {
 private:
+	std::mutex entriesMutex;
 	std::list<cacheEntry> entries;
-	
+
+	std::mutex listenersMutex;
 	std::vector<listenerEntry> listeners;
 
 public:
