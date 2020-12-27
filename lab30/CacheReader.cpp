@@ -48,8 +48,6 @@ void CacheReader::run()
 		}
 
 		//send chunks from queue
-		std::cout << "Writing" << std::endl;
-		std::cout << "messageQueue.size() = " << messageQueue.size() << std::endl;
 		while (!messageQueue.empty()) {
 
 			messageChunk chunk = messageQueue.front();
@@ -59,8 +57,6 @@ void CacheReader::run()
 			if (length == 0) {
 				proxy->closeSession(writeSocket);
 			}
-			chunk.buf[chunk.length] = '\0';
-			std::cout << chunk.buf;
 		}
 		queueHasData = false;
 	}
