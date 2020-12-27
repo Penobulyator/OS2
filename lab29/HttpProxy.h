@@ -39,8 +39,6 @@ private:
 
 	void acceptClient();
 
-	TcpSocket* connectToHost(char* hostName);
-
 public:
 	HttpProxy(int listenPort);
 	~HttpProxy();
@@ -48,8 +46,6 @@ public:
 	void start();
 
 	void gotNewRequest(ClientSocketHandler *clientSocketHandler, char *url);
-
-	void gotNewResponce(HostSocketHandler *hostSocketHandler);
 
 	void clear();
 };

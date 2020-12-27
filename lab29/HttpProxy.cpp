@@ -183,16 +183,6 @@ void HttpProxy::gotNewRequest(ClientSocketHandler *clientSocketHandler, char *ur
 
 }
 
-void HttpProxy::gotNewResponce(HostSocketHandler *hostSocketHandler)
-{
-	for (ProxyEntry proxyEntry : proxyEntries) {
-		if (proxyEntry.hostSocketHandler == hostSocketHandler) {
-			proxyEntry.clientSocketHandler->waitForRequest();
-			break;
-		}
-	}
-}
-
 void HttpProxy::clear()
 {
 	for (ProxyEntry proxyEntry : proxyEntries) {

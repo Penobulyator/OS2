@@ -10,12 +10,6 @@
 class HttpProxy;
 struct messageChunk;
 
-enum ClinetSocketHandlerState
-{
-	WAITING_FOR_REQUEST,
-	READING_REQUEST
-};
-
 class ClientSocketHandler
 {
 private:
@@ -23,13 +17,9 @@ private:
 	TcpSocket *hostSocket = NULL;
 	HttpProxy *proxy;
 
-	ClinetSocketHandlerState state;
-
 	std::queue<messageChunk> messageQueue;
 
-	bool recvFirstRequestChunk();
 	bool recvChunk();
-
 	bool sendChunk();
 
 	bool parseRequest(char *request);
@@ -43,8 +33,6 @@ public:
 	// returns false if session should be closed
 	//
 	bool handle(PollResult pollResult);
-
-	void waitForRequest();
 
 	void setHostSocket(TcpSocket *hostSocket);
 

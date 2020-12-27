@@ -8,8 +8,6 @@ HostSocketHandler::HostSocketHandler(TcpSocket * clientSocket, TcpSocket * hostS
 	this->proxy = proxy;
 	this->cache = cache;
 	this->url = NULL;
-
-	state = WAITING_FOR_RESPONCE;
 }
 
 HostSocketHandler::~HostSocketHandler()
@@ -59,55 +57,29 @@ bool HostSocketHandler::handle(PollResult pollResult)
 	int fd = pollResult.fd;
 	int revents = pollResult.revents;
 
-	switch (state)
-	{
-	case WAITING_FOR_RESPONCE:
-		if (fd == hostSocket->fd) {
-			if (revents & POLLHUP) {
+	if (revents & POLLHUP) {
 
-				//peer closed its end of the channel
-				return false;
-			}
-			else if (revents & POLLIN) {
-				//we have a new request to read
+		//peer closed its end of the channel
+		return false;
+	}
 
-				//change state
-				state = READING_RESPONCE;
-				proxy->gotNewResponce(this);
+	if (fd == hostSocket->fd) {
 
-				return recvChunk();
-
-			}
-		}
-		break;
-
-	case READING_RESPONCE:
-		if (fd == hostSocket->fd) {
-
-			if (revents & POLLHUP) {
-
-				//peer closed its end of the channel
-				return false;
-			}
-			else if (revents & POLLIN) {
+		if (revents & POLLIN) {
 		
-				//we can read a chunk from client
-				return recvChunk();
+			//we can read a chunk from host
+			return recvChunk();
 
-			}
-		}
-		else if (fd == clientSocket->fd) {
-			if (revents & POLLHUP) {
-
-				return false;
-			}
-			else if (revents & POLLOUT) {
-
-				//we can send a chunk to host
-				return sendChunk();
-			}
 		}
 	}
+	else if (fd == clientSocket->fd) {
+		if (revents & POLLOUT) {
+
+			//we can send a chunk to client
+			return sendChunk();
+		}
+	}
+
 
 	return true;
 }
@@ -129,6 +101,4 @@ void HostSocketHandler::waitForNextResponce(char *url)
 	std::cout << "HostSocketHandler with hostFd = " << hostSocket->fd << " starting to read " << url << std::endl;
 
 	cache->addEntry(url);
-
-	state = WAITING_FOR_RESPONCE;
 }

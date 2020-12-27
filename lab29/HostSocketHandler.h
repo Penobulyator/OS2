@@ -8,12 +8,6 @@ class HttpProxy;
 class Cache;
 struct messageChunk;
 
-enum HostSocketHandlerState
-{
-	WAITING_FOR_RESPONCE,
-	READING_RESPONCE
-};
-
 class HostSocketHandler
 {
 private:
@@ -23,8 +17,6 @@ private:
 	HttpProxy *proxy;
 
 	std::queue<messageChunk> messageQueue;
-
-	HostSocketHandlerState state;
 
 	Cache *cache;
 

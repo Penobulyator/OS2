@@ -3,7 +3,7 @@
 ClientSocketHandler::ClientSocketHandler(TcpSocket * clientSocket, HttpProxy *proxy):
 	clientSocket(clientSocket), proxy(proxy)
 {
-	waitForRequest();
+
 }
 
 ClientSocketHandler::~ClientSocketHandler()
@@ -12,32 +12,33 @@ ClientSocketHandler::~ClientSocketHandler()
 
 bool ClientSocketHandler::parseRequest(char *request) {
 	//check if it's a GET request
-	if (strstr(request, "GET") != request) {
+	if (strstr(request, "GET") == request) {
+		//find url
+		char *urlStart = strstr(request, "http://") + 7;
+
+		char *url = new char[2048];
+		int i;
+		for (i = 0; urlStart[i] != ' '; i++) {
+			url[i] = urlStart[i];
+		}
+		url[i] = '\0';
+
+		//notify proxy about new request
+		proxy->gotNewRequest(this, url);
+		return true;
+	}
+	else if (strstr(request, "CONNECT") == request) {
 		return false;
 	}
-
-	//find url
-	char *urlStart = strstr(request, "http://") + 7;
-
-	char *url = new char[2048];
-	int i;
-	for (i = 0; urlStart[i] != ' '; i++) {
-		url[i] = urlStart[i];
-	}
-	url[i] = '\0';
-
-	//notify proxy about new request
-	proxy->gotNewRequest(this, url);
 
 	return true;
 }
 
-
-bool ClientSocketHandler::recvFirstRequestChunk() {
+bool ClientSocketHandler::recvChunk() {
 	//read
 	char *buf = new char[MAX_CHUNK_SIZE];
 	int length = clientSocket->_read(buf, MAX_CHUNK_SIZE);
-	
+
 	if (length == 0) {
 		return false;
 	}
@@ -51,24 +52,6 @@ bool ClientSocketHandler::recvFirstRequestChunk() {
 
 
 	return parseRequest(buf);
-}
-
-bool ClientSocketHandler::recvChunk() {
-	//read
-	char *buf = new char[MAX_CHUNK_SIZE];
-	int length = clientSocket->_read(buf, MAX_CHUNK_SIZE);
-
-	if (length == 0) {
-		return false;
-	}
-
-	//add chunk to message queue
-	messageChunk chunk;
-	chunk.buf = buf;
-	chunk.length = length;
-	messageQueue.push(chunk);
-
-	return true;
 }
 
 bool ClientSocketHandler::sendChunk()
@@ -89,58 +72,29 @@ bool ClientSocketHandler::handle(PollResult pollResult)
 {
 	int fd = pollResult.fd;
 	int revents = pollResult.revents;
-	switch (state)
-	{
-	case WAITING_FOR_REQUEST:
-		if (fd == clientSocket->fd) {
-			if (revents & POLLHUP) {
 
-				//peer closed its end of the channel
-				return false;
-			}
-			else if (revents & POLLIN) {
+	if (revents & POLLHUP) {
 
-				state = READING_REQUEST;
+		//peer closed its end of the channel
+		return false;
+	}
 
-				//we have a new request to read
-				return recvFirstRequestChunk();
+	if (fd == clientSocket->fd) {
+		if (revents & POLLIN) {
 
-			}
-		}
-
-	case READING_REQUEST:
-		if (fd == clientSocket->fd) {
-
-			if (revents & POLLHUP) {
-
-				//peer closed its end of the channel
-				return false;
-			}
-			else if (revents & POLLIN) {
-
-				//we can read a chunk from client
-				return recvChunk();
-			}
-		}
-		else if (hostSocket != NULL && fd == hostSocket->fd) {
-			if (revents & POLLHUP) {
-
-				//peer closed its end of the channel
-				return false;
-			}
-			else if (revents & POLLOUT) {
-
-				//we can send a chunk to host
-				return sendChunk();
-			}
+			//we can read a chunk from client
+			return recvChunk();
 		}
 	}
-	return true;
-}
+	else if (hostSocket != NULL && fd == hostSocket->fd) {
+		if (revents & POLLOUT) {
 
-void ClientSocketHandler::waitForRequest()
-{
-	state = WAITING_FOR_REQUEST;
+			//we can send a chunk to host
+			return sendChunk();
+		}
+	}
+
+	return true;
 }
 
 void ClientSocketHandler::setHostSocket(TcpSocket * hostSocket)
